@@ -30,7 +30,7 @@ Key benefits:
 
 ## Analysis:
 
-[the fix](../ctf/images/commit.png)
+![Fix](../ctf/images/commit.png)
 
 ```c
 static const char max_stream_filters = 5;
