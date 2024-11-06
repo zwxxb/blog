@@ -1,3 +1,12 @@
+---
+title: "PHP filter chains - Fix"
+tags:
+  - PHP sec
+  - code Review
+  - Patch Review
+  - Appsec
+---
+
 # The End of PHP Filter Chains: A Security Evolution
 
 ## Introduction
