@@ -1,5 +1,4 @@
 ---
-title: "Security Research & CTF Writeups"
 author: "Amine Elsassi (zwxbj)"
 tags:
   - Java Sec
