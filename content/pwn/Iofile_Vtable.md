@@ -132,7 +132,8 @@ read(0, stderr + 1, 8);
 
 ![jumps](image-2.png)
 
-We can change the address of the vtable in the read function. In the case of the frpintf function (fwrite), the *_IO_new_file_xsputn* function is called, and the *_vtable_offset* set at that time is 0x38 when the *fprintf()* function is called, it calls the address of __xsputn at offset 0x38 of _IO_file_jumps. Therefore, if we input the address of the *get_shell()* function in the name variable and the address of the name variable -0x38 in the read function in case 4, we will be able to exploit it.
+We can change the address of the vtable in the read function. 
+In the case of the frpintf function (fwrite), the *_IO_new_file_xsputn* function is called, and the *_vtable_offset* set at that time is 0x38 when the *fprintf()* function is called, it calls the address of __xsputn at offset 0x38 of _IO_file_jumps. 
 
 ```python
 from pwn import *
@@ -157,5 +158,6 @@ p.interactive()
 
 To exploit this vulnerability, we need to understand the structure of the _IO_FILE object and the _IO_file_jumps vtable.
 The _IO_FILE structure contains a _vtable_offset field, which is used to index into the _IO_file_jumps vtable. When functions like *fprintf()* or *fwrite()* are called on the _IO_FILE object, they use this offset to call the corresponding function pointer in the vtable.
+
 By overwriting the _IO_file_jumps vtable with our own values, we can hijack the control flow and execute arbitrary code. Specifically, we can overwrite the __xsputn function pointer (at offset 0x38 in the vtable) with the address of the *get_shell()* function, and overwrite the address of the name variable (minus 0x38) as the new vtable pointer.
 
