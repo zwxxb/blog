@@ -20,7 +20,7 @@ Then randomly allocate 16 chunks of sum `0x10`and `0x28`size on the heap, resp
 ```c
 - header:
     
-    0x0: size ( ***signed*** long long)
+    0x0: size ( signed long long)
     
     0x8: ptr (char*)
     
