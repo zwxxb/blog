@@ -370,8 +370,9 @@ public class Reflections {
 ```
 
 These files should give you everything we need to create a `java.util.PriorityQueue` with the malicious elements in it with running the `compare()` method locally.
-****The AnotherClass is a custom comparator that implements both Comparator and Serializable interfaces. It has a compare(String a, String b) method that tries to execute the command provided in the string a and returns the exit value of the command. If the command execution fails, it throws a RuntimeException.
-****The Exploit class creates a PriorityQueue with AnotherClass as the comparator, adds two String objects to the queue to ensure compare() is called during deserialization, serializes the queue to a byte array, and then encodes the byte array to a base64 string.
+**The AnotherClass** is a custom comparator that implements both Comparator and Serializable interfaces. It has a compare(String a, String b) method that tries to execute the command provided in the string a and returns the exit value of the command. If the command execution fails, it throws a RuntimeException.
+
+**The Exploit** class creates a PriorityQueue with AnotherClass as the comparator, adds two String objects to the queue to ensure compare() is called during deserialization, serializes the queue to a byte array, and then encodes the byte array to a base64 string.
 
 ```java
 package com.pentesterlab;
