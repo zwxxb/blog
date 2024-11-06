@@ -1,4 +1,5 @@
 ---
+title: "From Tunisia with Love ."
 author: "Amine Elsassi (zwxbj)"
 tags:
   - Java Sec
@@ -11,11 +12,9 @@ tags:
   - Life
 ---
 
-# From Tunisia with love .
-
 ### About Me 
 
-I'm Amine (zwxbj) - I like appsec and i'm learning pwn 
+I'm Amine (zwxbj) - I like Appsec and i'm learning pwn 
 
 [View My Resume](./resume/Amine.cv.eng.pdf)
 
