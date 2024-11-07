@@ -39,7 +39,7 @@ Key benefits:
 
 ## Analysis:
 
-![Fix](../ctf/images/commit.png)
+![Fix](../ctf-web/images/commit.png)
 
 ```c
 static const char max_stream_filters = 5;
