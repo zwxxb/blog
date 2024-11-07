@@ -7,7 +7,7 @@ tags:
   - Appsec
 ---
 
-# The End of PHP Filter Chains: A Security Evolution
+# The End of PHP Filter Chains ?
 
 ## Introduction
 
