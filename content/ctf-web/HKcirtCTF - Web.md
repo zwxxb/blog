@@ -8,7 +8,7 @@ tags:
 ---
 so the question is a simple url2pdf 
 
-![chall1](./hkimages/image.png)
+![chall1](../ctf-web/hkimages/image.png)
 
 when passing a simple :
 
@@ -22,7 +22,7 @@ when passing a simple :
 ```
 we got this stack trace and we notice that the engine used to convert html to pdf is *wkhtmltopdf* 
 
-![alt text](./hkimages/image-1.png)
+![alt text](../ctf-web/hkimages/image-1.png)
 
 i knew that there's a recent fix for the file inclusion using the file protocol so we need to somehow play with it we will try to enable some flags to allow the the usage of local files (enabling the file://)
 
@@ -30,13 +30,13 @@ https://stackoverflow.com/questions/73599970/how-to-solve-wkhtmltopdf-reported-a
 
 maybe we can set *enable-local-file-access* 
 
-![alt text](./hkimages/image-2.png)
+![alt text](../ctf-web/hkimages/image-2.png)
 
 let’s dig a bit in the source code of python-pdfkit source code browsing the source code we came across this : 
 
 [python-pdfkit/pdfkit.py#L227](https://github.com/JazzCore/python-pdfkit/blob/master/pdfkit/pdfkit.py#L277)
 
-![alt text](./hkimages/image-3.png)
+![alt text](../ctf-web/hkimages/image-3.png)
 
 so the *_find_options_in_meta* function reads the HTML content and extracts configuration options that are encoded in HTML meta tags.
 
@@ -65,7 +65,7 @@ so the final payload would be
 </body>
 </html>
 ```
-![alt text](./hkimages/image-4.png)
+![alt text](../ctf-web/hkimages/image-4.png)
 
 # chimera - php
 
@@ -76,7 +76,7 @@ The tl;dr
 
 https://blog.orange.tw/posts/2024-08-confusion-attacks-en/
 
-![alt text](./hkimages/image-5.png)
+![alt text](../ctf-web/hkimages/image-5.png)
 
 basically : 
 
@@ -109,13 +109,13 @@ Why It Works:
     
 - PHP-FPM truncates at the `?` and executes `citrus.php`
 
-![alt text](./hkimages/image-6.png)
+![alt text](../ctf-web/hkimages/image-6.png)
 
 ok now the second bug : 
 
 the sleep(5) introduced in the 2 functions of *read()* and *write()* of the CitrusWorkspace class can lead to a race condition which allow us to have an arbitrary file R/W primitive
 
-![alt text](./hkimages/image-7.png)
+![alt text](../ctf-web/hkimages/image-7.png)
 
 ```python
 #!/usr/bin/env python3
@@ -188,7 +188,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-![alt text](./hkimages/image-8.png)
+![alt text](../ctf-web/hkimages/image-8.png)
 
 and the last last step is the the abuse of the fastcgi 
 
@@ -368,7 +368,7 @@ Shoutout to master strellic
 # Simple web server 
 
 for this question we have a simple c server 
-![alt text](./hkimages/image-9.png) 
+![alt text](../ctf-web/hkimages/image-9.png) 
 
 we notice a small check in here :
 ```c
@@ -381,4 +381,4 @@ where only length is the `sizeof(real_path)`
 char real_path[1024];
 ``` 
 so if our input is large enough we can bypass the extension check and get the flag 
-![alt text](./hkimages/image-10.png)
+![alt text](../ctf-web/hkimages/image-10.png)
