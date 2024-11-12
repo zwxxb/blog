@@ -18,7 +18,7 @@ The Performance API provides detailed timing data about the performance of web a
 
 Now we can see that when a valid character is appended to the URL, the server takes more time to respond compared to when an invalid character is appended. This likely results from additional server-side processing for valid inputs, such as database queries or data rendering, which are not triggered by invalid inputs. By measuring these timing differences, the script can deduce the correct characters one by one.
 
-![img](../ctf/images/xs.png)
+![img](../ctf-web/images/xs.png)
 
 ## **Finding the Admin User ID**
 
