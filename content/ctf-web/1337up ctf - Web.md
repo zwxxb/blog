@@ -63,7 +63,7 @@ router.get("/cats", getCurrentUser, (req, res) => {
 
 ![alt text](../ctf-web/1337ctf/cats.png)
 
-but there's an issue there's some sort of sanitization applied on username
+However, the username input appears to be filtered through a security sanitization measures
 
 ```javascript
 const { BadRequest } = require("http-errors");
@@ -82,8 +82,7 @@ module.exports = {
     sanitizeUsername,
 };
 ``` 
-so for now we need an alternative , we noticed that the username is does exist in the jwt token so if we control the jwt token payload we could achieve the template injection
-
+We found another way to attack: the username is stored in the JWT token. If we can change the JWT token data, we can try our template injection attack there instead.
 
 ```javascript
 function getCurrentUser(req, res, next) {
@@ -145,7 +144,22 @@ function verifyJWT(token) {
     });
 }
 ``` 
-The none algorithm is blocked, so we can't remove the signature verification but how about algorithm confusion? If we can change the token from RS256 (asymmetric) to HS256 (symmetric) and then sign with the public key, the server will use the same key to verify the signature 
+
+When working with JWT tokens, we can exploit algorithm confusion by:
+
+1. The server expects RS256 (asymmetric) algorithm
+2. We can modify the token's algorithm header from RS256 to HS256 (symmetric)
+3. Since HS256 uses the same key for signing and verification:
+   - We take the public key that's meant for RS256
+   - Use it as the HMAC secret key to sign with HS256
+4. When server verifies:
+   - It sees HS256 algorithm
+   - Uses its public key as HMAC secret
+   - The signature matches because we used the same public key
+
+This works because the server doesn't properly validate the algorithm type, allowing us to force it to use the public key as an HMAC secret.
+
+This is a common JWT security vulnerability when algorithm type checking isn't properly implemented.
 
 this is the solver 
 
@@ -214,8 +228,8 @@ def test_ssti(modified_token):
     response = httpx.get(CAT_URL, cookies=cookies)
 
 def main():
-    username = "cat"
-    password = "cat"
+    username = "zzzzzz"
+    password = "zzzzz"
 
     if not register_user(username, password):
         return
