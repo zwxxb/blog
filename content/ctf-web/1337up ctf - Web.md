@@ -479,8 +479,19 @@ reply.type("text/html").send(resp);
 ```
 
 ![alt text](../ctf-web/1337ctf/xss.png)
+
 6. **Credits**
-https://www.sonarsource.com/blog/encoding-differentials-why-charset-matters/ 
+- https://www.sonarsource.com/blog/encoding-differentials-why-charset-matters/ 
+- https://x.com/kevin_mizu/status/1812882499875319959 
+
+# Fruitables 
+
+This was a simple question . Tl;dr :
+
+1- Postgresql injection in the login form 
+2- get and crack credentials tjfry_admin 
+3- abuse the upload functionality in the admin portal to serve a webshell
+4- cat the flag :D 
 
 sadly didn't have time to do all the pwn challenges 
 
