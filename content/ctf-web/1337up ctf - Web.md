@@ -540,12 +540,9 @@ This allows an attacker to manipulate how the browser interprets the text by ins
 
 # Fruitables 
 
-This was a simple question . Tl;dr :
+TL;DR
 
-1- Postgresql injection in the login form 
-2- get and crack credentials tjfry_admin 
-3- abuse the upload functionality in the admin portal to serve a webshell
-4- cat the flag :D 
-
-sadly didn't have time to do all the pwn challenges 
-
+1. PostgreSQL injection to bypass login
+2. Extract and crack tjfry_admin's password
+3. Upload PHP webshell through admin portal
+4. Read flag via webshell execution
