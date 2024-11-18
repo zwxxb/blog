@@ -431,7 +431,7 @@ response = requests.post(url, headers=headers, data=xml_payload)
 print(response.text)
 ```
 
-# Sushi Search - After competetion 
+# Sushi Search - after the contest
 
 so we have a simple Fastify application - here's the key point
 
