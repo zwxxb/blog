@@ -8,7 +8,7 @@ tags:
   - Dompurify
 ---
 
-Hey, in the last few days i came a cross this client side challenge in twitter (Flatt jp xss) and i wanted to share the solution with you 
+Hey, in the last few days i came across this client side challenge in twitter (Flatt jp xss) and i wanted to share the solution with you 
 
 
 ![alt text](../ctf-web/images/flattsrc.png)
