@@ -1,4 +1,0 @@
-# Dirsearch started Thu Nov  7 13:59:06 2024 as: /usr/local/bin/dirsearch -u https://preprod-srir.e-santepaca.fr/ -H Cookie: JSESSIONID=node0zyk4srep421x1vxfbpa027szo619.node0; XSRF-TOKEN="5dcHNKx8qYTYXe/rLcAbnaQtPioHbZQAXwE5KEMQM3w="
-
-404   130B   https://preprod-srir.e-santepaca.fr/404.html
-200   632B   https://preprod-srir.e-santepaca.fr/web/
