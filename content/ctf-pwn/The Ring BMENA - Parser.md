@@ -1,5 +1,5 @@
 ---
-title: "The ring - BHMA"
+title: "- The ring - BHMA "
 tags:
   - Pwn
   - CTF 

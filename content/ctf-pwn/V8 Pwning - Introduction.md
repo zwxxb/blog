@@ -1,5 +1,5 @@
 ---
-title: "Introduction To V8 Pwning - 101"
+title: "- Introduction To V8 Pwning "
 tags:
   - Pwn
   - CTF

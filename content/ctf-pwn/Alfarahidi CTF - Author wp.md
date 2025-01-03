@@ -1,5 +1,5 @@
 ---
-title: "Baby Heap - Alfarahidi CTF"
+title: "- Baby Heap - Alfarahidi CTF"
 tags:
   - Pwn
   - CTF 

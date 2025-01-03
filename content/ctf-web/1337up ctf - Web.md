@@ -1,5 +1,5 @@
 ---
-title: "1337up CTF - Web challenges"
+title: "- 1337up CTF - Web challenges"
 tags:
   - JWT Key Confusion Attack
   - code Review

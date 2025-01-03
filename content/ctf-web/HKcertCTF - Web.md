@@ -1,5 +1,5 @@
 ---
-title: "hkcert CTF - Web challenges"
+title: "- HKcert CTF - Web challenges"
 tags:
   - PHP
   - code Review

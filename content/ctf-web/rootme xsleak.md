@@ -1,5 +1,5 @@
 ---
-title: "Rootme CTF - XsLeaks"
+title: "- Rootme CTF - XsLeaks"
 tags:
   - client side
   - web

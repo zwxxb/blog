@@ -1,5 +1,5 @@
 ---
-title: "IO_File Vtable - CTF"
+title: "- IO_File Vtable Pwn"
 tags:
   - Pwn
   - CTF 
