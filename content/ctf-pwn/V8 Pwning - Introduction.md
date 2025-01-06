@@ -1,5 +1,5 @@
 ---
-title: "- Introduction To V8 Pwning "
+title: "- Introduction To V8 Pwning"
 tags:
   - Pwn
   - CTF
@@ -175,3 +175,46 @@ FOR_WITH_HANDLE_SCOPE(isolate, uint32_t, i = 0, i, i < length, i++, {
             └─────────────────────────────────────────┘
 ```
 
+```javascript
+/**
+ *
+ * @param {BigInt[]} bigIntArray - The array of BigInt values to convert.
+ * @returns {number[]} 
+ */
+function bigIntToDouble(bigIntArray) {
+    const buffer = new ArrayBuffer(bigIntArray.length * 8);
+    const view = new DataView(buffer);
+
+    bigIntArray.forEach((bigInt, index) => {
+        if (bigInt < 0n || bigInt > 0xFFFFFFFFFFFFFFFFn) {
+            throw new RangeError(`BigInt at index ${index} is out of 64-bit range.`);
+        }
+        view.setBigUint64(index * 8, bigInt, true); 
+    });
+    const doubleArray = new Float64Array(buffer);
+    return Array.from(doubleArray);
+}
+
+const shellcodeBigInts = [
+    0xE26AAB9D7C30429A, 
+    0xE6E16E04E7F04AAA,
+    0x2426F0154CED1A28,
+    0x659E7E9B1DAC5C91,
+    0x48634E27C0914CF7,
+    0x66F1C6BEC5BAA678,
+    0x58242B7AA4C44C56,
+    0xCAC6609DEB8663C7n
+];
+
+try {
+    const shellcode = bigIntToDouble(shellcodeBigInts);
+    
+    if (typeof shellcode.run === 'function') {
+        shellcode.run();
+    } else {
+        console.warn('shellcode.run is not a function.');
+    }
+} catch (error) {
+    console.error('Error converting BigInt array to Double array:', error);
+}
+```

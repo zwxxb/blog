@@ -1,5 +1,5 @@
 ---
-title: "Java Security - Basics"
+title: "- Java Security - Basics"
 tags:
   - Java Sec
   - Web
