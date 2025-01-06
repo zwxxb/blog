@@ -269,7 +269,7 @@ def delete(idx):
 
 
 # Double Free
-create(0x10, "dreamhack")
+create(0x10, "zzz")
 delete(0)
 delete(0)
 
