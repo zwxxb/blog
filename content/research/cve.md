@@ -1,5 +1,5 @@
 ---
-title: "Remote Code Execution - HelpSpot"
+title: "- Remote Code Execution - HelpSpot"
 tags:
   - PHP sec
   - code Review
