@@ -164,7 +164,6 @@ External Object                       Offset from Base
     +------------------------------------------------------------------------------------+
                                 => Potential Sandbox Escape
 
-                     [ Explanation of the ASCII Diagram ]
 - The "Sandbox Base Address" marks the start of a protected 1 TB region used by V8.
 - The "External Pointer Table" replaces raw pointers with table indices. An OOB (out-of-bounds)
   write in unprivileged code could overwrite an entry to point into privileged memory.
@@ -172,7 +171,7 @@ External Object                       Offset from Base
   data, effectively bypassing the isolation mechanism.
 ```
 
-## Eg V8 SBX bypass 
+## Eg V8 SBX bypass - WasmTableObject & WasmTrustedInstanceData : 
 
 The issue mainly happens in the following functions:
 
