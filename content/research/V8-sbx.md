@@ -128,11 +128,7 @@ External Object                       Offset from Base
 - **Unprivileged Address Space**: Memory allocated for objects, guarded by sandbox boundaries.
 - **Pointer Indirection**: All external references use an **External Pointer Table**, eliminating raw pointers.
 
----
-
 ## Example: Potential Sandbox Escape
-
-### ASCII Representation of a Sandbox Escape Attempt
 
 ```ascii
                                  [ V8 Sandbox Memory Layout ]
@@ -204,15 +200,16 @@ For now the table is empty. We can create a simple export function in a WASM mod
  (export "indirect" (func $indirect))
 )
 ```
+
 Next, we can set that function into the WASM Table we created and we can create another
 WASM Module that is calling indirectly the export function from the table.
 
 
 ```
-Modifies the function index to point to controlled memory
-Swaps Module 2 with Module 0 to Escape
-Sets up shellcode in WASM RWX memory
-Triggers the exploit through the indirect call
+- Modifies the function index to point to controlled memory
+- Swaps Module 2 with Module 0 to Escape
+- Sets up shellcode in WASM RWX memory
+- Triggers the exploit through the indirect call
 ```
 
 
