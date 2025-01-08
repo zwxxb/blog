@@ -97,11 +97,12 @@ out/debug/d8 --trace-ic --trace-opt --trace-deopt
 
 ```mermaid
 graph LR;
-A[v8 Bug] --> B[Memory corruption];
-B --> C[Arbitrary memory read / write];
-C --> D[code Execution (in renderer)];
-D --> E[chrome sandbox bug];
-E --> F[code execution (SBX bypassed)];
+    A[v8 Bug] --> B[Memory corruption];
+    B --> C[Arbitrary memory read/write];
+    C --> D[Code Execution in renderer];
+    D --> E[Chrome sandbox bug];
+    E --> F[Code execution SBX bypassed];
+    
 ```
 
 # Limitation 
@@ -178,7 +179,7 @@ The issue mainly happens in the following functions:
 2. **`WasmTableObject::UpdateDispatchTables`** :   Synchronizes the internal dispatch tables with the current state of the WebAssembly table.
 3. **`WasmTrustedInstanceData::GetCallTarget`** :  Fetches the appropriate function pointer for an indirect call from the trusted instance.
 
-![v8](./imgs/image.png)
+![v8](../research/imgs/image.png)
 
 we will create `WasmTable` and 2 `WASM` instances with an indirect call , The goal here is to create a WASM Module with an export function that is calling indirectly
 another export function from another WASM Module.To do that, we start by creating a WASM Table that will contain a reference to the export
