@@ -1,5 +1,5 @@
 ---
-title: "- Flatt JP xess challenge"
+title: "- Flatt JP xss challenge"
 tags:
   - client side
   - XSS
