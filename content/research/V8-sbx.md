@@ -179,8 +179,6 @@ The issue mainly happens in the following functions:
 2. **`WasmTableObject::UpdateDispatchTables`** :   Synchronizes the internal dispatch tables with the current state of the WebAssembly table.
 3. **`WasmTrustedInstanceData::GetCallTarget`** :  Fetches the appropriate function pointer for an indirect call from the trusted instance.
 
-![v8](../research/imgs/image.png)
-
 we will create `WasmTable` and 2 `WASM` instances with an indirect call , The goal here is to create a WASM Module with an export function that is calling indirectly
 another export function from another WASM Module.To do that, we start by creating a WASM Table that will contain a reference to the export
 function that will be called indirectly
