@@ -102,7 +102,7 @@ graph LR;
     C --> D[Code Execution in renderer];
     D --> E[Chrome sandbox bug];
     E --> F[Code execution SBX bypassed];
-    
+
 ```
 
 # Limitation 
