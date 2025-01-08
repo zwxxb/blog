@@ -109,6 +109,7 @@ graph LR;
 
 ● Compiler-based memory safety doesn’t work if compiler is attack surface
   -> Any logic bug can potentially turn into memory corruption
+
 ● Disabling optional compilers solves only a part of the problem
   -> Plenty of bugs elsewhere
 
